@@ -32,6 +32,6 @@
 *.app
 
 # Visual studio crap
-.vs
+.vs/*
 *.pdb
 *.ipdb

@@ -1,0 +1,17 @@
+﻿  Camera.cpp
+c:\users\ultamatum\desktop\cmp203 - lab 5\graphicsprogramming\camera.cpp(12): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+c:\users\ultamatum\desktop\cmp203 - lab 5\graphicsprogramming\camera.cpp(13): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+c:\users\ultamatum\desktop\cmp203 - lab 5\graphicsprogramming\camera.cpp(14): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+c:\users\ultamatum\desktop\cmp203 - lab 5\graphicsprogramming\camera.cpp(15): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+c:\users\ultamatum\desktop\cmp203 - lab 5\graphicsprogramming\camera.cpp(16): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+c:\users\ultamatum\desktop\cmp203 - lab 5\graphicsprogramming\camera.cpp(17): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+  Input.cpp
+  Main.cpp
+  Scene.cpp
+c:\users\ultamatum\desktop\cmp203 - lab 5\graphicsprogramming\scene.cpp(77): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+c:\users\ultamatum\desktop\cmp203 - lab 5\graphicsprogramming\scene.cpp(84): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+  Vector3.cpp
+  Generating code
+  All 55 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  GraphicsProgramming.vcxproj -> C:\Users\Ultamatum\Desktop\CMP203 - Lab 5\Release\GraphicsProgramming.exe

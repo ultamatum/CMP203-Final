@@ -21,6 +21,8 @@
 #include "Model.h"
 #include "Shadow.h"
 #include "Ball.h"
+#include "BrickWall.h"
+#include "Desk.h"
 
 
 class Scene{
@@ -42,7 +44,6 @@ public:
 protected:
 	//Libraries to create shapes
 	DetailedPlane floor;
-	Cuboid wall;
 
 	//Model loading Calls
 	Model laptop;
@@ -50,6 +51,8 @@ protected:
 
 	//Gameobjects
 	Ball glowball;
+	BrickWall brickWall;
+	Desk desk;
 
 	// Renders text (x, y positions, RGB colour of text, string of text to be rendered)
 	void displayText(float x, float y, float r, float g, float b, char* string);
@@ -63,8 +66,6 @@ protected:
 	//Texture Calls
 	GLuint skyboxTex;
 	GLuint floorTex;
-	GLuint woodTex;
-	GLuint brickTex;
 
 	//Cameras
 	Camera freeCam;

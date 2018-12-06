@@ -10,13 +10,26 @@ Ball::Ball()
 		SOIL_FLAG_MIPMAPS | SOIL_FLAG_NTSC_SAFE_RGB | SOIL_FLAG_COMPRESS_TO_DXT
 	);
 
-	model.Init(20, 20, 5);
+	model.Init(20, 20, 1);
+	
+	position.y = 3;
+	position.z = 10;
 }
 
 Ball::~Ball() {}
 
+void Ball::Update(float dt)
+{
+	rotation.y += 10 * dt;
+}
+
 void Ball::Render()
 {
+	glTranslatef(position.x, position.y, position.z);
+	glRotatef(rotation.x, 1, 0, 0);
+	glRotatef(rotation.y, 0, 1, 0);
+	glRotatef(rotation.z, 0, 0, 1);
 	glBindTexture(GL_TEXTURE_2D, texture);
 	model.Render();
+	glBindTexture(GL_TEXTURE_2D, NULL);
 }

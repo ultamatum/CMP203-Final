@@ -9,6 +9,7 @@ class Ball : public GameObject
 		~Ball();
 
 		void Render();
+		void Update(float dt);
 
 	private:
 		Sphere model;

@@ -87,9 +87,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Ball.cpp" />
+    <ClCompile Include="BrickWall.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Cuboid.cpp" />
     <ClCompile Include="Cylinder.cpp" />
+    <ClCompile Include="Desk.cpp" />
     <ClCompile Include="DetailedPlane.cpp" />
     <ClCompile Include="Disk.cpp" />
     <ClCompile Include="GameObject.cpp" />
@@ -104,9 +106,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Ball.h" />
+    <ClInclude Include="BrickWall.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Cuboid.h" />
     <ClInclude Include="Cylinder.h" />
+    <ClInclude Include="Desk.h" />
     <ClInclude Include="DetailedPlane.h" />
     <ClInclude Include="Disk.h" />
     <ClInclude Include="GameObject.h" />

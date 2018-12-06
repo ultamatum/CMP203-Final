@@ -48,22 +48,6 @@ Scene::Scene(Input *in)
 		SOIL_FLAG_MIPMAPS | SOIL_FLAG_NTSC_SAFE_RGB | SOIL_FLAG_COMPRESS_TO_DXT
 	);
 
-	woodTex = SOIL_load_OGL_texture
-	(
-		"gfx/light_wood.png",
-		SOIL_LOAD_AUTO,
-		SOIL_CREATE_NEW_ID,
-		SOIL_FLAG_MIPMAPS | SOIL_FLAG_NTSC_SAFE_RGB | SOIL_FLAG_COMPRESS_TO_DXT
-	);
-
-	brickTex = SOIL_load_OGL_texture
-	(
-		"gfx/bricks.png",
-		SOIL_LOAD_AUTO,
-		SOIL_CREATE_NEW_ID,
-		SOIL_FLAG_MIPMAPS | SOIL_FLAG_NTSC_SAFE_RGB | SOIL_FLAG_COMPRESS_TO_DXT
-	);
-
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	
 	//Load models
@@ -72,7 +56,6 @@ Scene::Scene(Input *in)
 
 	//Initialise procedural shapes
 	floor.Init(5, 50, 50);
-	wall.Init(2, 2, 0.1, 3);
 
 	// Initialise scene variables
 }
@@ -175,6 +158,7 @@ void Scene::handleInput(float dt)
 void Scene::update(float dt)
 {
 	// update scene related variables.
+	glowball.Update(dt);
 
 	// Calculate FPS for output
 	calculateFPS();
@@ -182,9 +166,6 @@ void Scene::update(float dt)
 
 void Scene::render() 
 {
-	GLfloat Light_Ambient[] = { 0.3f, 0.3f, 0.3f, 1.0f };
-	GLfloat Light_Diffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-	GLfloat Light_Position[] = { 0.0f, 20.0f, 10.0f, 1.0f };
 
 	// Clear Color and Depth Buffers
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -198,14 +179,38 @@ void Scene::render()
 			freeCam.GetUpX(), freeCam.GetUpY(), freeCam.GetUpZ());
 
 	// Lighting Setup
-	glLightfv(GL_LIGHT0, GL_AMBIENT, Light_Ambient);
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, Light_Diffuse);
-	glLightfv(GL_LIGHT0, GL_POSITION, Light_Position);
+	#pragma region Sun
+	GLfloat Sun_Ambient[] = { 0.3f, 0.3f, 0.3f, 1.0f };
+	GLfloat Sun_Diffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	GLfloat Sun_Position[] = { 0.0f, 20.0f, 10.0f, 1.0f };
+
+	glLightfv(GL_LIGHT0, GL_AMBIENT, Sun_Ambient);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, Sun_Diffuse);
+	glLightfv(GL_LIGHT0, GL_POSITION, Sun_Position);
 	glEnable(GL_LIGHT0);
+#pragma endregion
+
+	#pragma region Light Ball
+	glPushMatrix();
+		GLfloat Ball_Ambient[] = { 0.1f, 0.1f, 0.1f, 1.0f };
+		GLfloat Ball_Diffuse[] = { 1.0f, 1.0f, 0.4f, 1.0f };
+		GLfloat Ball_Position[] = { glowball.position.x, glowball.position.y, glowball.position.z, 1.0f };
+
+		glRotatef(glowball.rotation.y, 0, 1, 0);
+
+		glLightfv(GL_LIGHT1, GL_AMBIENT, Ball_Ambient);
+		glLightfv(GL_LIGHT1, GL_DIFFUSE, Ball_Diffuse);
+		glLightfv(GL_LIGHT1, GL_POSITION, Ball_Position);
+		glLightf(GL_LIGHT1, GL_CONSTANT_ATTENUATION, 1.0);
+		glLightf(GL_LIGHT1, GL_LINEAR_ATTENUATION, 0.05);
+		glLightf(GL_LIGHT1, GL_QUADRATIC_ATTENUATION, 0.03);
+		
+	glPopMatrix();
+#pragma endregion
 
 	//Initialise shadow matrix
 	float shadowMatrix[16];
-	shadow.generateShadowMatrix(shadowMatrix, Light_Position, floorPlane);
+	shadow.generateShadowMatrix(shadowMatrix, Sun_Position, floorPlane);
 
 	// Render geometry/scene here -------------------------------------
 	RenderSkybox();
@@ -237,7 +242,7 @@ void Scene::render()
 	glDisable(GL_LIGHTING);
 	glDisable(GL_TEXTURE_2D);
 
-		glColor3f(0.1f, 0.1f, 0.1f);	//Shadow's colour
+		glColor3f(0.01f, 0.01f, 0.01f);	//Shadow's colour
 		glPushMatrix();
 			glMultMatrixf((GLfloat *)shadowMatrix);
 			//Translate to floor and draw shadow
@@ -247,30 +252,11 @@ void Scene::render()
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_LIGHTING);
 	glEnable(GL_TEXTURE_2D);
-
-	//Initialise shadows on walls
-	shadow.generateShadowMatrix(shadowMatrix, Light_Position, wallPlane);
-
-	//Render Wall Shadows
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_LIGHTING);
-	glDisable(GL_TEXTURE_2D);
-
-		glColor3f(0.1f, 0.1f, 0.1f);	//Shadow's colour
-		glPushMatrix();
-			glMultMatrixf((GLfloat *)shadowMatrix);
-			//Translate to floor and draw shadow
-			glTranslatef(0, 2.5, -41);
-			Contents();
-		glPopMatrix();
-
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_LIGHTING);
-	glEnable(GL_TEXTURE_2D);
-
 
 	//Disable Shadow Stencil
 	glDisable(GL_STENCIL_TEST);
+
+	glEnable(GL_LIGHT1);
 
 	//Render scene contents
 	Contents();
@@ -448,356 +434,25 @@ void Scene::displayText(float x, float y, float r, float g, float b, char* strin
 
 void Scene::Contents()
 {
+	glPushMatrix();
+		glRotatef(glowball.rotation.y, 0, 1, 0);
+		glowball.Render();
+	glPopMatrix();
+
 	#pragma region Office Area
 	//Office Area
 	glPushMatrix();
-		glTranslatef(0, 0, -3);
+		glTranslatef(desk.position.x, desk.position.y, desk.position.z);
 		//Creates and renders the desk to the screen
 		glPushMatrix();
-			glScalef(1.5, 1.5, 1.5);
-			#pragma region Render Desk
-			glBindTexture(GL_TEXTURE_2D, woodTex);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-			glPushMatrix();
-				//Desk Top
-				glPushMatrix();
-					glTranslatef(0, 1, 0);
-					glBegin(GL_QUADS);
-					#pragma region Top
-					//Bottom Left
-					glNormal3f(0, 1, 0);
-					glTexCoord2f(0, 1);
-					glVertex3f(-1, 0.1, 0.5);
-
-					//Bottom Right
-					glNormal3f(0, 1, 0);
-					glTexCoord2f(1, 1);
-					glVertex3f(1, 0.1, 0.5);
-
-					//Top Right
-					glNormal3f(0, 1, 0);
-					glTexCoord2f(1, 0);
-					glVertex3f(1, 0.1, -0.5);
-
-					//Top Left
-					glNormal3f(0, 1, 0);
-					glTexCoord2f(0, 0);
-					glVertex3f(-1, 0.1, -0.5);
-				#pragma endregion
-
-					#pragma region Bottom
-					//Bottom Left
-					glNormal3f(0, -1, 0);
-					glTexCoord2f(0, 1);
-					glVertex3f(-1, 0, 0.5);
-
-					//Bottom Right
-					glNormal3f(0, -1, 0);
-					glTexCoord2f(2, 1);
-					glVertex3f(1, 0, 0.5);
-
-					//Top Right
-					glNormal3f(0, -1, 0);
-					glTexCoord2f(2, 0);
-					glVertex3f(1, 0, -0.5);
-
-					//Top Left
-					glNormal3f(0, -1, 0);
-					glTexCoord2f(0, 0);
-					glVertex3f(-1, 0, -0.5);
-				#pragma endregion
-
-					#pragma region Left
-					//Bottom Left
-					glNormal3f(-1, 0, 0);
-					glTexCoord2f(0, 0.6);
-					glVertex3f(-1, 0, 0.5);
-
-					//Bottom Right
-					glNormal3f(-1, 0, 0);
-					glTexCoord2f(1, 0.6);
-					glVertex3f(-1, 0, -0.5);
-
-					//Top Right
-					glNormal3f(-1, 0, 0);
-					glTexCoord2f(1, 0.5);
-					glVertex3f(-1, 0.1, -0.5);
-
-					//Top Left
-					glNormal3f(-1, 0, 0);
-					glTexCoord2f(0, 0.5);
-					glVertex3f(-1, 0.1, 0.5);
-				#pragma endregion
-		
-					#pragma region Right
-					//Bottom Left
-					glNormal3f(1, 0, 0);
-					glTexCoord2f(0, 0.1);
-					glVertex3f(1, 0, 0.5);
-
-					//Bottom Right
-					glNormal3f(1, 0, 0);
-					glTexCoord2f(2, 0.1);
-					glVertex3f(1, 0, -0.5);
-
-					//Top Right
-					glNormal3f(1, 0, 0);
-					glTexCoord2f(2, 0.0);
-					glVertex3f(1, 0.1, -0.5);
-
-					//Top Left
-					glNormal3f(1, 0, 0);
-					glTexCoord2f(0, 0.0);
-					glVertex3f(1, 0.1, 0.5);
-				#pragma endregion
-
-					#pragma region Front
-					//Bottom Left
-					glNormal3f(0, 0, 1);
-					glTexCoord2f(0, 0.6);
-					glVertex3f(1, 0, 0.5);
-
-					//Bottom Right
-					glNormal3f(0, 0, 1);
-					glTexCoord2f(2, 0.6);
-					glVertex3f(-1, 0, 0.5);
-
-					//Top Right
-					glNormal3f(0, 0, 1);
-					glTexCoord2f(2, 0.5);
-					glVertex3f(-1, 0.1, 0.5);
-
-					//Top Left
-					glNormal3f(0, 0, 1);
-					glTexCoord2f(0, 0.5);
-					glVertex3f(1, 0.1, 0.5);
-				#pragma endregion
-
-					#pragma region Back 
-					//Bottom Left
-					glNormal3f(0, 0, -1);
-					glTexCoord2f(0, 0.6);
-					glVertex3f(1, 0, -0.5);
-
-					//Bottom Right
-					glNormal3f(0, 0, -1);
-					glTexCoord2f(2, 0.6);
-					glVertex3f(-1, 0, -0.5);
-
-					//Top Right
-					glNormal3f(0, 0, -1);
-					glTexCoord2f(2, 0.5);
-					glVertex3f(-1, 0.1, -0.5);
-
-					//Top Left
-					glNormal3f(0, 0, -1);
-					glTexCoord2f(0, 0.5);
-					glVertex3f(1, 0.1, -0.5);
-				#pragma endregion
-					glEnd();
-				glPopMatrix();
-
-					//Right Leg
-				glPushMatrix();
-					glTranslatef(1, 0, 0);
-					glBegin(GL_QUADS);
-					#pragma region Front
-						//Bottom Left
-						glNormal3f(1, 0, 0);
-						glTexCoord2f(0, 1);
-						glVertex3f(0, 0, -0.5);
-
-						//Bottom Right
-						glNormal3f(1, 0, 0);
-						glTexCoord2f(2, 1);
-						glVertex3f(0, 0, 0.5);
-
-						//Top Right
-						glNormal3f(1, 0, 0);
-						glTexCoord2f(2, 0);
-						glVertex3f(0, 1, 0.5);
-
-						//Top Left
-						glNormal3f(1, 0, 0);
-						glTexCoord2f(0, 0);
-						glVertex3f(0, 1, -0.5);
-					#pragma endregion
-
-					#pragma region Back
-						//Bottom Left
-						glNormal3f(-1, 0, 0);
-						glTexCoord2f(0, 1);
-						glVertex3f(-0.1, 0, -0.5);
-
-						//Bottom Right
-						glNormal3f(-1, 0, 0);
-						glTexCoord2f(2, 1);
-						glVertex3f(-0.1, 0, 0.5);
-
-						//Top Right
-						glNormal3f(-1, 0, 0);
-						glTexCoord2f(2, 0);
-						glVertex3f(-0.1, 1, 0.5);
-
-						//Top Left
-						glNormal3f(-1, 0, 0);
-						glTexCoord2f(0, 0);
-						glVertex3f(-0.1, 1, -0.5);
-					#pragma endregion
-
-					#pragma region Right
-						//Bottom Left
-						glNormal3f(0, 0, -1);
-						glTexCoord2f(0, 2);
-						glVertex3f(0, 0, -0.5);
-
-						//Bottom Right
-						glNormal3f(0, 0, -1);
-						glTexCoord2f(0.1, 2);
-						glVertex3f(-0.1, 0, -0.5);
-
-						//Top Right
-						glNormal3f(0, 0, -1);
-						glTexCoord2f(0.1, 0);
-						glVertex3f(-0.1, 1, -0.5);
-
-						//Top Left
-						glNormal3f(0, 0, -1);
-						glTexCoord2f(0, 0);
-						glVertex3f(0, 1, -0.5);
-					#pragma endregion
-
-					#pragma region Left
-						//Bottom Left
-						glNormal3f(0, 0, 1);
-						glTexCoord2f(0, 2);
-						glVertex3f(0, 0, 0.5);
-
-						//Bottom Right
-						glNormal3f(0, 0, 1);
-						glTexCoord2f(0.1, 2);
-						glVertex3f(-0.1, 0, 0.5);
-
-						//Top Right
-						glNormal3f(0, 0, 1);
-						glTexCoord2f(0.1, 0);
-						glVertex3f(-0.1, 1, 0.5);
-
-						//Top Left
-						glNormal3f(0, 0, 1);
-						glTexCoord2f(0, 0);
-						glVertex3f(0, 1, 0.5);
-					#pragma endregion
-					glEnd();
-				glPopMatrix();
-
-				//Left Leg
-				glPushMatrix();
-					glTranslatef(-0.9, 0, 0);
-					glBegin(GL_QUADS);
-
-					#pragma region Front
-					//Bottom Left
-					glNormal3f(1, 0, 0);
-					glTexCoord2f(0, 1);
-					glVertex3f(0, 0, -0.5);
-
-					//Bottom Right
-					glNormal3f(1, 0, 0);
-					glTexCoord2f(2, 1);
-					glVertex3f(0, 0, 0.5);
-
-					//Top Right
-					glNormal3f(1, 0, 0);
-					glTexCoord2f(2, 0);
-					glVertex3f(0, 1, 0.5);
-
-					//Top Left
-					glNormal3f(1, 0, 0);
-					glTexCoord2f(0, 0);
-					glVertex3f(0, 1, -0.5);
-				#pragma endregion
-
-					#pragma region Back
-					//Bottom Left
-					glNormal3f(-1, 0, 0);
-					glTexCoord2f(0, 1);
-					glVertex3f(-0.1, 0, -0.5);
-
-					//Bottom Right
-					glNormal3f(-1, 0, 0);
-					glTexCoord2f(2, 1);
-					glVertex3f(-0.1, 0, 0.5);
-
-					//Top Right
-					glNormal3f(-1, 0, 0);
-					glTexCoord2f(2, 0);
-					glVertex3f(-0.1, 1, 0.5);
-
-					//Top Left
-					glNormal3f(-1, 0, 0);
-					glTexCoord2f(0, 0);
-					glVertex3f(-0.1, 1, -0.5);
-				#pragma endregion
-
-					#pragma region Right
-					//Bottom Left
-					glNormal3f(0, 0, -1);
-					glTexCoord2f(0, 2);
-					glVertex3f(0, 0, -0.5);
-
-					//Bottom Right
-					glNormal3f(0, 0, -1);
-					glTexCoord2f(0.1, 2);
-					glVertex3f(-0.1, 0, -0.5);
-
-					//Top Right
-					glNormal3f(0, 0, -1);
-					glTexCoord2f(0.1, 0);
-					glVertex3f(-0.1, 1, -0.5);
-
-					//Top Left
-					glNormal3f(0, 0, -1);
-					glTexCoord2f(0, 0);
-					glVertex3f(0, 1, -0.5);
-				#pragma endregion
-
-					#pragma region Left
-					//Bottom Left
-					glNormal3f(0, 0, 1);
-					glTexCoord2f(0, 2);
-					glVertex3f(0, 0, 0.5);
-
-					//Bottom Right
-					glNormal3f(0, 0, 1);
-					glTexCoord2f(0.1, 2);
-					glVertex3f(-0.1, 0, 0.5);
-
-					//Top Right
-					glNormal3f(0, 0, 1);
-					glTexCoord2f(0.1, 0);
-					glVertex3f(-0.1, 1, 0.5);
-
-					//Top Left
-					glNormal3f(0, 0, 1);
-					glTexCoord2f(0, 0);
-					glVertex3f(0, 1, 0.5);
-				#pragma endregion
-					glEnd();
-				glPopMatrix();
-			glPopMatrix();
-		#pragma endregion
-
+			desk.Render();	//Render the desk object
 			//Items on top of desk
 			glPushMatrix();
 				glTranslatef(0, 1.1, 0);	//Translate to top of desk
-
 				//Placing monitor on desk
 				glPushMatrix();
 					glScalef(0.15, 0.15, 0.15);
-
-					laptop.render();
+					laptop.render();		//Render the laptop model
 				glPopMatrix();
 
 				//Placing mouse on desk
@@ -811,51 +466,13 @@ void Scene::Contents()
 			glPopMatrix();
 		glPopMatrix();
 
-			//Renders the wall behind the desk (With hole to allow for window)
-			//Walls are 2 x 2 unit tiles that are used to make a larger wall
+		
 		glPushMatrix();
 			//Set translate relative to desk
-			glTranslatef(0, 0.75, -0.8);
-			glBindTexture(GL_TEXTURE_2D, brickTex);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-			for (int y = 0; y < 3; y++)
-			{
-				for (int x = -2; x < 3; x++)
-				{
-					if ((x != 0 && x != -1 && x != 1) || y != 1)
-					{
-						glPushMatrix();
-							glTranslatef(2 * x, 2 * y, 0);
-							wall.Render();
-						glPopMatrix();
-					}
-				}
-			}
-
-			glPushMatrix();
-				glColor4f(0, 0, 0.2f, 0.3f);
-				glTranslatef(-3, 3, 0);
-				glDisable(GL_LIGHTING);
-				glEnable(GL_BLEND);
-				glBegin(GL_QUADS);
-				glVertex3f(0, 0, 0);
-
-				glVertex3f(0, -2, 0);
-
-				glVertex3f(6, -2, 0);
-
-				glVertex3f(6, 0, 0);
-				glEnd();
-				glEnable(GL_LIGHTING);
-			glPopMatrix();
+			glTranslatef(brickWall.position.x, brickWall.position.y, brickWall.position.z);
+			brickWall.Render();
 		glPopMatrix();
 	glPopMatrix();
 #pragma endregion
 
-	glPushMatrix();
-		glTranslatef(glowball.position.x, glowball.position.y, glowball.position.z);
-		glowball.Render();
-	glPopMatrix();
 }

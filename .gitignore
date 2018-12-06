@@ -33,5 +33,6 @@
 
 # Visual studio crap
 .vs/*
+.vs/GraphicsProgramming/v15
 *.pdb
 *.ipdb

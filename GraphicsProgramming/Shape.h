@@ -14,18 +14,11 @@ class Shape
 {
 	public:
 		void Render();
-		void Update();
 
 		bool isQuads;
 
 		vector<float> vertices;
 		vector<float> normals;
 		vector<float> texCoords;
-
-		//Position
-		Vector3 position = { 0, 0, 0 };
-
-		//Velocity
-		Vector3 velocity = { 0, 0, 0 };
 };
 #endif 

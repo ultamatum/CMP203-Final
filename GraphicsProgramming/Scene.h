@@ -20,6 +20,7 @@
 #include "Cuboid.h"
 #include "Model.h"
 #include "Shadow.h"
+#include "Ball.h"
 
 
 class Scene{
@@ -46,6 +47,9 @@ protected:
 	//Model loading Calls
 	Model laptop;
 	Model mouse;
+
+	//Gameobjects
+	Ball glowball;
 
 	// Renders text (x, y positions, RGB colour of text, string of text to be rendered)
 	void displayText(float x, float y, float r, float g, float b, char* string);

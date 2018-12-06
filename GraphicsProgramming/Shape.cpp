@@ -22,11 +22,3 @@ void Shape::Render()
 	glDisableClientState(GL_NORMAL_ARRAY);
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 }
-
-//Default update method just to move object by it's current velocity (will only be used if collisions get implemented in time)
-void Shape::Update()
-{
-	position.x += velocity.x;
-	position.y += velocity.y;
-	position.z += velocity.z;
-}

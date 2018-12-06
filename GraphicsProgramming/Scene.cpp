@@ -853,4 +853,9 @@ void Scene::Contents()
 		glPopMatrix();
 	glPopMatrix();
 #pragma endregion
+
+	glPushMatrix();
+		glTranslatef(glowball.position.x, glowball.position.y, glowball.position.z);
+		glowball.Render();
+	glPopMatrix();
 }

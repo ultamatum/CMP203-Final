@@ -1,12 +1,16 @@
 ﻿  Scene.cpp
 c:\users\ultamatum\desktop\cmp203 - project\cmp203-graphics-programming-final\graphicsprogramming\detailedplane.h(30): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
 c:\users\ultamatum\desktop\cmp203 - project\cmp203-graphics-programming-final\graphicsprogramming\scene.cpp(9): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
-c:\users\ultamatum\desktop\cmp203 - project\cmp203-graphics-programming-final\graphicsprogramming\scene.cpp(132): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-c:\users\ultamatum\desktop\cmp203 - project\cmp203-graphics-programming-final\graphicsprogramming\scene.cpp(139): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-c:\users\ultamatum\desktop\cmp203 - project\cmp203-graphics-programming-final\graphicsprogramming\scene.cpp(205): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
-c:\users\ultamatum\desktop\cmp203 - project\cmp203-graphics-programming-final\graphicsprogramming\scene.cpp(206): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
-c:\users\ultamatum\desktop\cmp203 - project\cmp203-graphics-programming-final\graphicsprogramming\scene.cpp(451): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
-c:\users\ultamatum\desktop\cmp203 - project\cmp203-graphics-programming-final\graphicsprogramming\scene.cpp(454): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
-c:\users\ultamatum\desktop\cmp203 - project\cmp203-graphics-programming-final\graphicsprogramming\scene.cpp(460): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
-c:\users\ultamatum\desktop\cmp203 - project\cmp203-graphics-programming-final\graphicsprogramming\scene.cpp(462): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+c:\users\ultamatum\desktop\cmp203 - project\cmp203-graphics-programming-final\graphicsprogramming\scene.cpp(36): warning C4305: 'argument': truncation from 'double' to 'float'
+c:\users\ultamatum\desktop\cmp203 - project\cmp203-graphics-programming-final\graphicsprogramming\scene.cpp(37): warning C4305: 'argument': truncation from 'double' to 'float'
+c:\users\ultamatum\desktop\cmp203 - project\cmp203-graphics-programming-final\graphicsprogramming\scene.cpp(164): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+c:\users\ultamatum\desktop\cmp203 - project\cmp203-graphics-programming-final\graphicsprogramming\scene.cpp(182): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+c:\users\ultamatum\desktop\cmp203 - project\cmp203-graphics-programming-final\graphicsprogramming\scene.cpp(190): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
+c:\users\ultamatum\desktop\cmp203 - project\cmp203-graphics-programming-final\graphicsprogramming\scene.cpp(202): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+c:\users\ultamatum\desktop\cmp203 - project\cmp203-graphics-programming-final\graphicsprogramming\scene.cpp(203): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+c:\users\ultamatum\desktop\cmp203 - project\cmp203-graphics-programming-final\graphicsprogramming\scene.cpp(474): warning C4018: '<': signed/unsigned mismatch
+c:\users\ultamatum\desktop\cmp203 - project\cmp203-graphics-programming-final\graphicsprogramming\scene.cpp(512): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+c:\users\ultamatum\desktop\cmp203 - project\cmp203-graphics-programming-final\graphicsprogramming\scene.cpp(515): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+c:\users\ultamatum\desktop\cmp203 - project\cmp203-graphics-programming-final\graphicsprogramming\scene.cpp(521): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+c:\users\ultamatum\desktop\cmp203 - project\cmp203-graphics-programming-final\graphicsprogramming\scene.cpp(523): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
   GraphicsProgramming.vcxproj -> C:\Users\Ultamatum\Desktop\CMP203 - Project\CMP203-Graphics-programming-Final\Debug\GraphicsProgramming.exe

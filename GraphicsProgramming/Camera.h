@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Vector3.h"
+#include "Input.h"
 
 class Camera
 {
@@ -8,14 +9,20 @@ public:
 	Camera();
 	~Camera();
 
-	void Update();
+	void Init(float speed, Vector3 startPos, Vector3 limits, bool xMove, bool yMove, bool zMove);
+	void InitOrbital(Vector3 target, float radius, float orbitHeight, float speed);
+	void InitStatic(Vector3 pos);
 
-	void MoveForward(float dt, float speed);
-	void MoveBackward(float dt, float speed);
+	void HandleInput(Input *input, float dt, int width, int height);
+
+	void Update(float dt);
+
+	void MoveForward(float dt);
+	void MoveBackward(float dt);
 	void MoveUp(float dt);
 	void MoveDown(float dt);
-	void MoveLeft(float dt, float speed);
-	void MoveRight(float dt, float speed);
+	void MoveLeft(float dt);
+	void MoveRight(float dt);
 	void RotateYaw(float value);
 	void RotatePitch(float value);
 
@@ -64,11 +71,23 @@ public:
 
 private:
 	Vector3 pos = Vector3(0, 2, 0);
+	Vector3 posLims;	//Limits to position essentially creating invisible bounding wall to keep cameras within
+	Vector3 orbitTarget;
 	Vector3 lookAt;
 	Vector3 forward;
 	Vector3 right;
 	Vector3 up;
 
+	bool xMove = true, yMove = true, zMove = true;
+	bool orbital;
+	bool staticCam;
+	int maxPitch = 90;
+	int startDelay = 0;
+
 	float yaw = 0, pitch = 0, roll = 0;
+	float speed = 5;
+	float orbitTheta = 0;
+	float orbitHeight = 0;
+	float orbitRadius = 0;
 };
 

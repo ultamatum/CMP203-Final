@@ -29,7 +29,12 @@ Scene::Scene(Input *in)
 
 	// Other OpenGL / render setting should be applied here.
 	glutWarpPointer(width / 2, height / 2);
-	freeCam.Update();
+
+	//Camera setups
+	cameras[FPSCAM].Init(2, Vector3(0, 2.5, 0), Vector3(25, 0, 25), true, false, true);
+	cameras[FREECAM].Init(5, Vector3(10, 10, 10), Vector3(1000, 0, 1000), true, true, true);
+	cameras[ORBITALCAM].InitOrbital(Vector3(0, 2, 0), 20, 6, 0.1);
+	cameras[STATICCAM].InitStatic(Vector3(0.8, 2.5, -2));
 
 	//Load Textures
 	skyboxTex = SOIL_load_OGL_texture
@@ -62,7 +67,6 @@ Scene::Scene(Input *in)
 
 void Scene::handleInput(float dt)
 {
-	float camChanged = false;
 	// Handle user input
 
 	// Toggle wireframe mode
@@ -83,76 +87,25 @@ void Scene::handleInput(float dt)
 		input->SetKeyUp('p');
 	}
 
-	#pragma region Camera Control
-	//Move forward
-	if (input->isKeyDown('w'))
+	if (input->isLeftMouseButtonPressed())
 	{
-		freeCam.MoveForward(dt, 5);
-		camChanged = true;
+		PickRects();
+
+		input->setLeftMouseButton(false);
 	}
 
-	//Move left
-	if (input->isKeyDown('a'))
-	{
-		freeCam.MoveLeft(dt, 5);
-		camChanged = true;
-	}
+	//Switch camera
+	if (input->isKeyDown('1')) curCam = FPSCAM;
 
-	//Move backward
-	if (input->isKeyDown('s'))
-	{
-		freeCam.MoveBackward(dt, 5);
-		camChanged = true;
-	}
+	if (input->isKeyDown('2')) curCam = FREECAM;
 
-	//Move Right
-	if (input->isKeyDown('d'))
-	{
-		freeCam.MoveRight(dt, 5);
-		camChanged = true;
-	}
+	if (input->isKeyDown('3')) curCam = ORBITALCAM;
 
-	//Move up
-	if (input->isKeyDown(32))
-	{
-		freeCam.MoveUp(dt);
-		camChanged = true;
-	}
+	if (input->isKeyDown('4')) curCam = STATICCAM;
 
-	//Move down
-	if (input->isKeyDown('c'))
-	{
-		freeCam.MoveDown(dt);
-		camChanged = true;
-	}
-
-	//Camera rotation along the x-axis
-	if (input->getMouseX() != width / 2)
-	{
-		freeCam.RotateYaw((input->getMouseX() - width / 2) * 0.2);
-		camChanged = true;
-	}
-
-	//Camera rotation along the y-axis
-	if (input->getMouseY() != height / 2)
-	{
-		freeCam.RotatePitch(-(input->getMouseY() - height / 2) * 0.2);
-		camChanged = true;
-	}
-
-
-	if (framecount < 2)
-	{
-		freeCam.SetPitch(0);
-		freeCam.SetYaw(0);
-		freeCam.SetRoll(0);
-		camChanged = true;
-		framecount++;
-	}
+	if(curCam != ORBITALCAM) cameras[curCam].HandleInput(input, dt, width, height);
 
 	glutWarpPointer(width / 2, height / 2);
-	if (camChanged) freeCam.Update();
-#pragma endregion
 }
 
 void Scene::update(float dt)
@@ -160,13 +113,33 @@ void Scene::update(float dt)
 	// update scene related variables.
 	glowball.Update(dt);
 
+	if (red < 255 && green == 0)
+	{
+		red++;
+		blue--;
+	}
+	else if (green < 255 && blue == 0)
+	{
+		green++;
+		red--;
+	}
+	else if (blue < 255)
+	{
+		blue++;
+		green--;
+	}
+
+	if (curCam == ORBITALCAM) 
+		cameras[curCam].Update(dt);
+
+	//cameras[ORBITALCAM].Update(dt);
+
 	// Calculate FPS for output
 	calculateFPS();
 }
 
 void Scene::render() 
 {
-
 	// Clear Color and Depth Buffers
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
@@ -174,9 +147,9 @@ void Scene::render()
 	glLoadIdentity();
 
 	// Set the camera
-	gluLookAt(freeCam.GetPosX(), freeCam.GetPosY(), freeCam.GetPosZ(),
-			freeCam.GetLookAtX(), freeCam.GetLookAtY(), freeCam.GetLookAtZ(),
-			freeCam.GetUpX(), freeCam.GetUpY(), freeCam.GetUpZ());
+	gluLookAt(cameras[curCam].GetPosX(), cameras[curCam].GetPosY(), cameras[curCam].GetPosZ(),
+			cameras[curCam].GetLookAtX(), cameras[curCam].GetLookAtY(), cameras[curCam].GetLookAtZ(),
+			cameras[curCam].GetUpX(), cameras[curCam].GetUpY(), cameras[curCam].GetUpZ());
 
 	// Lighting Setup
 	#pragma region Sun
@@ -187,6 +160,9 @@ void Scene::render()
 	glLightfv(GL_LIGHT0, GL_AMBIENT, Sun_Ambient);
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, Sun_Diffuse);
 	glLightfv(GL_LIGHT0, GL_POSITION, Sun_Position);
+	glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 1.0);
+	glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 0.1);
+	glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.0);
 	glEnable(GL_LIGHT0);
 #pragma endregion
 
@@ -202,11 +178,35 @@ void Scene::render()
 		glLightfv(GL_LIGHT1, GL_DIFFUSE, Ball_Diffuse);
 		glLightfv(GL_LIGHT1, GL_POSITION, Ball_Position);
 		glLightf(GL_LIGHT1, GL_CONSTANT_ATTENUATION, 1.0);
-		glLightf(GL_LIGHT1, GL_LINEAR_ATTENUATION, 0.05);
-		glLightf(GL_LIGHT1, GL_QUADRATIC_ATTENUATION, 0.03);
-		
+		glLightf(GL_LIGHT1, GL_LINEAR_ATTENUATION, 0.25);
+		glLightf(GL_LIGHT1, GL_QUADRATIC_ATTENUATION, 0.15);
+
+		glEnable(GL_LIGHT1);
 	glPopMatrix();
 #pragma endregion
+
+	#pragma region RGB Light
+	glPushMatrix();
+		GLfloat RGB_Ambient[] = { 0.2, 0.2, 0.2, 1 };
+		GLfloat RGB_Diffuse[] = { red / 255, blue / 255, green / 255, 1 };
+		GLfloat RGB_Position[] = { 0.81f, 3, -3, 1.0f };
+		GLfloat RGB_Spot_Direction[] = { 0.0, -1.0f, 0.0f };
+
+		glLightfv(GL_LIGHT2, GL_AMBIENT, RGB_Ambient);
+		glLightfv(GL_LIGHT2, GL_DIFFUSE, RGB_Diffuse);
+		glLightfv(GL_LIGHT2, GL_POSITION, RGB_Position);
+		glLightf(GL_LIGHT2, GL_SPOT_CUTOFF, 60.0f);
+		glLightfv(GL_LIGHT2, GL_SPOT_DIRECTION, RGB_Spot_Direction);
+		glLightf(GL_LIGHT2, GL_SPOT_EXPONENT, 0);
+		glLightf(GL_LIGHT2, GL_CONSTANT_ATTENUATION, 1);
+		glLightf(GL_LIGHT2, GL_LINEAR_ATTENUATION, 0.4);
+		glLightf(GL_LIGHT2, GL_QUADRATIC_ATTENUATION, 0.3);
+		
+		if(RGBon) glEnable(GL_LIGHT2);
+		else glDisable(GL_LIGHT2);
+	glPopMatrix();
+#pragma endregion
+
 
 	//Initialise shadow matrix
 	float shadowMatrix[16];
@@ -256,8 +256,6 @@ void Scene::render()
 	//Disable Shadow Stencil
 	glDisable(GL_STENCIL_TEST);
 
-	glEnable(GL_LIGHT1);
-
 	//Render scene contents
 	Contents();
 
@@ -265,18 +263,19 @@ void Scene::render()
 	
 	// Render text, should be last object rendered.
 	renderTextOutput();
-	
+
 	// Swap buffers, after all objects are rendered.
 	glutSwapBuffers();
 }
 
+//Function to create and render a skybox around the camera
 void Scene::RenderSkybox()
 {
 	glBindTexture(GL_TEXTURE_2D, skyboxTex);
 	glPushMatrix();
-		glTranslatef(freeCam.GetPosX(), freeCam.GetPosY(), freeCam.GetPosZ());
-		glDisable(GL_DEPTH_TEST);
-		glDisable(GL_LIGHTING);
+		glTranslatef(cameras[curCam].GetPosX(), cameras[curCam].GetPosY(), cameras[curCam].GetPosZ());
+		glDisable(GL_DEPTH_TEST);	//Need to disable depth test so skybox appears behind the scene
+		glDisable(GL_LIGHTING);		//Disable lighting so skybox isn't affected
 
 		glBegin(GL_QUADS);
 			//Front Face
@@ -392,13 +391,15 @@ void Scene::calculateFPS()
 
 // Compiles standard output text including FPS and current mouse position.
 void Scene::renderTextOutput()
-{
+{   
+	glDisable(GL_LIGHTING);
 	// Render current mouse position and frames per second.
 	sprintf_s(mouseText, "Mouse: %i, %i", input->getMouseX(), input->getMouseY());
-	sprintf_s(camLocation, "Camera: %f -x, %f -y, %f -z", freeCam.GetPosX(), freeCam.GetPosY(), freeCam.GetPosZ());
+	sprintf_s(camLocation, "Camera: %f -x, %f -y, %f -z", cameras[curCam].GetPosX(), cameras[curCam].GetPosY(), cameras[curCam].GetPosZ());
 	displayText(-1.f, 0.96f, 1.f, 0.f, 0.f, mouseText);
 	displayText(-1.f, 0.90f, 1.f, 0.f, 0.f, fps);
 	displayText(-1.f, 0.84f, 1.f, 0.f, 0.f, camLocation);
+	glEnable(GL_LIGHTING);
 }
 
 // Renders text to screen. Must be called last in render function (before swap buffers)
@@ -432,10 +433,70 @@ void Scene::displayText(float x, float y, float r, float g, float b, char* strin
 	glMatrixMode(GL_MODELVIEW);
 }
 
+void Scene::PickRects()
+{
+	GLuint selectBuf[BUFSIZ];
+	GLint hits;
+	GLint viewport[4];
+
+	glGetIntegerv(GL_VIEWPORT, viewport);	//Gets the viewport region and stores it in the variable
+	glSelectBuffer(BUFSIZ, selectBuf);		//Sets the select buffer
+	glRenderMode(GL_SELECT);				//Sets the render mode to selection mode
+
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+		glLoadIdentity();
+		//Creates a selection matrix centred around the mouse
+		gluPickMatrix((GLdouble)input->getMouseX(), (GLdouble)(viewport[3] - input->getMouseY()), 5.0, 5.0, viewport);
+		gluPerspective(fov, (viewport[3] / viewport[4]) , nearPlane, farPlane);		//Sets the correct perspective
+
+		RenderSkybox();
+		Contents();
+	glPopMatrix();
+	hits = glRenderMode(GL_RENDER);
+	ProcessHits(hits, selectBuf);
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluPerspective(fov, ((float)width / (float)height), nearPlane, farPlane);
+	glMatrixMode(GL_MODELVIEW);
+}
+
+void Scene::ProcessHits(GLint hits, GLuint selectBuf[])
+{
+	unsigned int i, j;
+	GLuint names, *ptr;
+	float z1, z2;
+
+	printf("hits = %d\n", hits);
+	ptr = (GLuint *)selectBuf;
+
+	for (i = 0; i < hits; i++) { /* for each hit */
+		names = *ptr; ptr++;
+		z1 = (float)*ptr / 0xffffffff; ptr++; /* scale 0-1 */
+		z2 = (float)*ptr / 0xffffffff; ptr++;
+
+		for (j = 0; j < names; j++) { /* for each name */
+			if (*ptr == 1)
+			{
+				if (RGBon) RGBon = false;
+				else RGBon = true;
+			}
+			ptr++;
+		}
+	}
+
+}
+
+//Function to store the contents of the scene
 void Scene::Contents()
 {
+	glInitNames();
+	glPushName(-1);
+
 	glPushMatrix();
 		glRotatef(glowball.rotation.y, 0, 1, 0);
+		glLoadName(16);
 		glowball.Render();
 	glPopMatrix();
 
@@ -461,6 +522,7 @@ void Scene::Contents()
 					glRotatef(90, 0, 1, 0);
 					glScalef(0.15, 0.15, 0.15);
 
+					glLoadName(1);
 					mouse.render();
 				glPopMatrix();
 			glPopMatrix();

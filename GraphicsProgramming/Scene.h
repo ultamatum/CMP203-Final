@@ -42,6 +42,16 @@ public:
 	void Contents();
 
 protected:
+	// Renders text (x, y positions, RGB colour of text, string of text to be rendered)
+	void displayText(float x, float y, float r, float g, float b, char* string);
+	//Function to check what is currently being interacted with
+	void PickRects();
+	//Function to process all the hits from the previous function
+	void ProcessHits(GLint hits, GLuint selectBuf[]);
+	// A function to collate all text output in a single location
+	void renderTextOutput();
+	void calculateFPS();
+
 	//Libraries to create shapes
 	DetailedPlane floor;
 
@@ -54,12 +64,6 @@ protected:
 	BrickWall brickWall;
 	Desk desk;
 
-	// Renders text (x, y positions, RGB colour of text, string of text to be rendered)
-	void displayText(float x, float y, float r, float g, float b, char* string);
-	// A function to collate all text output in a single location
-	void renderTextOutput();
-	void calculateFPS();
-
 	// draw primitive functions
 	Shadow shadow;
 
@@ -68,10 +72,16 @@ protected:
 	GLuint floorTex;
 
 	//Cameras
-	Camera freeCam;
+	Camera cameras[5];
+	enum cameraTypes { FPSCAM = 0, FREECAM = 1, ORBITALCAM = 2, STATICCAM = 3};
+	int curCam = FPSCAM;
 
 	// For access to user input.
 	Input* input;
+
+	//Game variables
+	//Values for RGB to loop between the colours
+	float red = 0, green = 0, blue = 255;
 		
 	// For Window and frustum calculation.
 	int width, height;
@@ -84,6 +94,8 @@ protected:
 	char camLocation[60];
 
 	int framecount = 0;
+
+	bool RGBon = true;
 };
 
 #endif
